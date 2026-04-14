@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Skill 管理入口 — V3 Limen</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#faf9f5;--sb:#f0ede6;--border:#e5e2da;--text:#1c1c1e;--muted:#8b8680;
+  --light:#b0aca6;--primary:#5b5bd6;--surface:#fff;
+  --ok-color:#16a34a;--ok-bg:rgba(22,163,74,.09);--ok-bd:rgba(22,163,74,.25);
+  --err-color:#dc2626;--err-bg:rgba(220,38,38,.09);--err-bd:rgba(220,38,38,.25);
+  --warn-color:#c2410c;--warn-bg:rgba(234,88,12,.09);--warn-bd:rgba(234,88,12,.25);
+  --bundle-color:#7c3aed;--bundle-bg:rgba(124,58,237,.08);
+  --atomic-color:#0284c7;--atomic-bg:rgba(2,132,199,.08);
+}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden;font-size:13px}
+
+/* SIDEBAR */
+.sb{width:220px;min-width:220px;background:var(--sb);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.sb-top{padding:10px 12px 8px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.bot-icon{width:26px;height:26px;background:var(--primary);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bot-icon svg{width:14px;height:14px;fill:#fff}
+.ib{width:22px;height:22px;border:none;background:transparent;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0}
+.ib:hover{background:rgba(0,0,0,.07)}
+.ib svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+.sb-nav{padding:6px 8px;display:flex;flex-direction:column;gap:2px}
+.sb-btn{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:5px;border:none;background:transparent;cursor:pointer;font-size:12px;color:var(--muted);width:100%;text-align:left;font-family:inherit}
+.sb-btn:hover{background:rgba(0,0,0,.05);color:var(--text)}
+.sb-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+.kb{margin-left:auto;font-size:10px;color:var(--light);background:rgba(0,0,0,.06);padding:1px 4px;border-radius:3px}
+.sb-section{padding:6px 12px 2px;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.sb-list{flex:1;overflow-y:auto;padding:0 8px 8px}
+.sb-group{font-size:10px;color:var(--light);padding:5px 4px 1px;font-weight:500}
+.sb-item{padding:5px 8px;border-radius:5px;cursor:pointer;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-item:hover{background:rgba(0,0,0,.05);color:var(--text)}
+.sb-bottom{padding:8px 12px;border-top:1px solid var(--border);display:flex;align-items:center}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+
+/* TOPBAR */
+.topbar{height:46px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:8px;flex-shrink:0;background:var(--bg);z-index:10}
+.topbar-title{font-size:13px;font-weight:500;flex:1;min-width:0}
+.stag{display:inline-flex;align-items:center;gap:3px;background:rgba(37,99,235,.09);color:#2563eb;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:500}
+.ssep{color:var(--light);font-size:11px}
+.top-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:12px;color:var(--text);font-family:inherit;transition:all .15s}
+.top-btn:hover{background:#f5f3ff;border-color:#c4b5fd;color:var(--primary)}
+.top-btn.active-btn{background:#f0edff;border-color:#a5b4fc;color:var(--primary);font-weight:600}
+.top-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* CHAT AREA */
+.chat-body{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.chat-content{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.chat-hint{text-align:center;opacity:.5}
+.chat-hint svg{display:block;margin:0 auto 10px}
+
+/* INPUT */
+.input-area{padding:10px 24px 16px;flex-shrink:0}
+.input-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.input-top{padding:10px 14px 2px}
+.input-top textarea{width:100%;border:none;outline:none;resize:none;font-family:inherit;font-size:13px;color:var(--text);background:transparent;line-height:1.5}
+.input-bottom{display:flex;align-items:center;gap:6px;padding:6px 14px 10px}
+.itool{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:11px;color:var(--muted);font-family:inherit}
+.imodel{margin-left:auto;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:3px}
+.isend{width:28px;height:28px;border-radius:50%;background:var(--primary);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:6px}
+.isend svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2.5}
+
+/* OVERLAY BACKDROP */
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,.18);z-index:30;opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay.show{opacity:1;pointer-events:all}
+
+/* SKILL PANEL */
+.skill-panel{position:absolute;top:0;right:0;bottom:0;width:820px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;box-shadow:-6px 0 28px rgba(0,0,0,.1);z-index:40;transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1)}
+.skill-panel.open{transform:translateX(0)}
+
+.panel-hd{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;gap:10px}
+.panel-title{font-size:14px;font-weight:700;color:var(--text)}
+.panel-source{font-size:11px;color:var(--muted);flex:1}
+.panel-close{width:26px;height:26px;border:none;background:transparent;cursor:pointer;border-radius:5px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.panel-close:hover{background:rgba(0,0,0,.07)}
+.panel-close svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* PANEL BODY */
+.panel-body{display:flex;flex:1;overflow:hidden}
+
+/* LEFT ACTION BAR */
+.panel-left{width:136px;min-width:136px;background:#f8f8f7;border-right:1px solid var(--border);display:flex;flex-direction:column;padding:10px 8px;gap:2px;overflow-y:auto}
+.p-act{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:5px;border:none;background:transparent;cursor:pointer;font-size:12px;color:var(--text);width:100%;text-align:left;font-family:inherit;line-height:1.3;transition:background .12s}
+.p-act:hover{background:rgba(0,0,0,.06)}
+.p-act svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;color:var(--muted)}
+.p-act.primary{background:var(--primary);color:#fff;margin-top:4px}
+.p-act.primary svg{color:rgba(255,255,255,.8)}
+.p-act.primary:hover{background:#4f4fd4}
+.p-link{display:flex;align-items:center;gap:7px;padding:6px 8px;font-size:12px;color:var(--primary);cursor:pointer;border-radius:5px;text-decoration:none;border:none;background:transparent;width:100%;font-family:inherit}
+.p-link:hover{background:rgba(91,91,214,.08)}
+.p-link svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+.p-div{height:1px;background:var(--border);margin:6px 4px}
+
+/* RIGHT CONTENT */
+.panel-right{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.panel-search{padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-search input{width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;font-family:inherit;outline:none;background:var(--bg);color:var(--text)}
+.panel-search input:focus{border-color:#c4b5fd}
+.panel-tabs{display:flex;padding:0 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.ptab{padding:8px 14px;border:none;background:transparent;cursor:pointer;font-size:12px;color:var(--muted);font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.ptab.on{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}
+
+/* SKILL TABLE */
+.skill-list{flex:1;overflow-y:auto}
+.sk-table{width:100%;border-collapse:collapse}
+.sk-table th{font-size:11px;font-weight:600;color:var(--muted);text-align:left;padding:7px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:1;white-space:nowrap}
+.sk-row{border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.sk-row:hover td{background:#faf9f5}
+.sk-row.expanded td{background:#f7f6f2}
+.sk-td{padding:8px 14px;font-size:12px;vertical-align:middle}
+.sk-name-cell{font-family:'Menlo','Monaco',monospace;font-size:11.5px;color:var(--text);font-weight:500}
+.sk-type{display:inline-flex;align-items:center;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;gap:3px}
+.type-bundle{background:var(--bundle-bg);color:var(--bundle-color)}
+.type-atomic{background:var(--atomic-bg);color:var(--atomic-color)}
+.status-badge{display:inline-flex;align-items:center;gap:4px;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:500;border:1px solid;white-space:nowrap}
+.s-ok{background:var(--ok-bg);border-color:var(--ok-bd);color:var(--ok-color)}
+.s-fail{background:var(--err-bg);border-color:var(--err-bd);color:var(--err-color)}
+.sk-date{color:var(--muted);font-size:11px;white-space:nowrap}
+.expand-icon{color:var(--light);transition:transform .2s;flex-shrink:0}
+.sk-row.expanded .expand-icon{transform:rotate(90deg)}
+
+/* DETAIL ROW */
+.detail-row td{padding:0!important}
+.detail-box{background:#f4f3ef;border-bottom:2px solid var(--border);padding:14px 16px}
+.detail-section{margin-bottom:14px}
+.detail-section:last-child{margin-bottom:0}
+.detail-sec-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.detail-sec-title svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+.detail-desc{font-size:12px;color:var(--text);line-height:1.65;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 12px}
+.detail-check-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border)}
+.detail-check-item:last-child{border-bottom:none}
+.check-badge{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.check-ok{background:var(--ok-bg);color:var(--ok-color)}
+.check-fail{background:var(--err-bg);color:var(--err-color)}
+.check-ok svg,.check-fail svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2.5}
+.check-label{font-weight:600;min-width:72px;color:var(--muted)}
+.check-val{color:var(--text);flex:1}
+
+/* ATOMIC CONTENT */
+.sub-list{display:flex;flex-direction:column;gap:8px}
+.sub-card{background:var(--surface);border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.sub-card-hd{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#faf9f5;border-bottom:1px solid var(--border)}
+.sub-card-name{font-family:monospace;font-size:12px;font-weight:600;color:var(--text)}
+.action-list{padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.action-item{border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.action-hd{display:flex;align-items:center;gap:7px;padding:6px 10px;background:#f8f8f7;border-bottom:1px solid var(--border)}
+.action-name{font-family:monospace;font-size:12px;font-weight:600;color:var(--primary)}
+.action-desc{font-size:11px;color:var(--muted);margin-left:auto}
+.params-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.params-table th{font-size:10px;font-weight:600;color:var(--muted);text-align:left;padding:5px 10px;background:#fdfdfc;border-bottom:1px solid var(--border)}
+.params-table td{padding:5px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+.params-table tr:last-child td{border-bottom:none}
+.param-name{font-family:monospace;font-weight:600;color:var(--text)}
+.param-type{color:var(--atomic-color);font-family:monospace;font-size:10.5px}
+.param-req{display:inline-block;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:600}
+.req-yes{background:rgba(220,38,38,.1);color:#dc2626}
+.req-no{background:rgba(0,0,0,.06);color:var(--muted)}
+.param-desc{color:var(--muted)}
+
+/* ATOMICS LIST in bundle */
+.atomics-list{display:flex;flex-direction:column;gap:4px}
+.atomic-ref{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:5px;background:var(--surface);border:1px solid var(--border);font-size:12px}
+.atomic-ref-name{font-family:monospace;color:var(--text);flex:1}
+
+/* CONFLICT MATRIX */
+.matrix-wrap{flex:1;overflow:auto;padding:14px}
+.mx-table{border-collapse:collapse;font-size:11px}
+.mx-table th,.mx-table td{border:1px solid var(--border);padding:5px 9px;text-align:center;white-space:nowrap}
+.mx-table th{background:#f8f8f7;font-weight:600;color:var(--muted)}
+.mx-table td.conflict{background:var(--err-bg);color:var(--err-color);font-weight:600}
+.mx-table td.clear{background:var(--ok-bg);color:var(--ok-color)}
+.mx-table td.self{background:#f0f0f0;color:var(--light)}
+
+/* BUNDLE DETAIL TABS */
+.dtab{padding:5px 12px;border:none;background:transparent;cursor:pointer;font-size:12px;color:var(--muted);font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.dtab.on{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}
+.dtab:hover:not(.on){color:var(--text)}
+
+/* STATES */
+.panel-state{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--muted)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* SWITCHER */
+.switcher{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:3px;z-index:500;background:rgba(255,255,255,.95);border:1px solid var(--border);border-radius:7px;padding:4px;backdrop-filter:blur(8px);box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.sw{padding:3px 10px;border-radius:4px;border:none;background:transparent;cursor:pointer;font-size:11px;color:var(--muted);font-family:inherit}
+.sw.on{background:var(--primary);color:#fff}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;padding:8px 16px;border-radius:7px;font-size:12px;opacity:0;transition:opacity .25s;z-index:999;pointer-events:none;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sb">
+  <div class="sb-top">
+    <div class="bot-icon"><svg viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm-1.5 9.5v-5l4 2.5-4 2.5z"/></svg></div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:12px;font-weight:600">wesber</div>
+      <div style="font-size:10px;color:var(--muted)">默认助手</div>
+    </div>
+    <button class="ib"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
+    <button class="ib"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="18" rx="1"/><rect x="3" y="3" width="4" height="18" rx="1"/></svg></button>
+  </div>
+  <div class="sb-nav">
+    <button class="sb-btn"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新对话</button>
+    <button class="sb-btn"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>搜索<span class="kb">⌘K</span></button>
+  </div>
+  <div class="sb-section">最近对话</div>
+  <div class="sb-list">
+    <div class="sb-group">今天</div>
+    <div class="sb-item">购买10U比特币指南</div>
+    <div class="sb-item">帮我用Python写一个比特币定投模拟器</div>
+    <div class="sb-group">昨天</div>
+    <div class="sb-item">帮我搜索知识库Gate App如何交易</div>
+    <div class="sb-group">更早</div>
+    <div class="sb-item">你好</div>
+    <div class="sb-item">用USDT买1GT</div>
+    <div class="sb-item">BTC快速分析</div>
+    <div class="sb-item">ETH市场线索与分析报告</div>
+  </div>
+  <div class="sb-bottom">
+    <button class="ib"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg></button>
+    <button class="ib" style="margin-left:auto"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+  </div>
+</aside>
+
+<!-- MAIN CHAT -->
+<main class="main">
+  <!-- TOPBAR — 入口在此 -->
+  <div class="topbar">
+    <span class="topbar-title">Limen 测试平台</span>
+    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+      <span class="stag"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>已连入上下文</span>
+      <span class="ssep">·</span>
+      <span class="stag">VIP1</span>
+      <span class="ssep">·</span>
+      <span class="stag">15个能力</span>
+    </div>
+    <!-- Capability 已有入口 -->
+    <button class="top-btn" style="margin-left:10px">
+      <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      Capability
+    </button>
+    <!-- ★ Skill 新入口 — 点击打开 Skill 管理面板 -->
+    <button class="top-btn" id="skill-entry-btn" onclick="openPanel()" title="打开 Skill 管理">
+      <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+      Skill
+    </button>
+    <button class="ib" style="margin-left:4px"><svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h12"/></svg></button>
+  </div>
+
+  <!-- CHAT CONTENT (placeholder) -->
+  <div class="chat-body">
+    <div class="chat-content">
+      <div class="chat-hint">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <div style="font-size:13px;margin-top:4px">有什么可以帮你？</div>
+        <div style="font-size:11px;margin-top:6px;color:var(--light)">点击右上角 <strong style="color:var(--primary)">Skill</strong> 按钮，打开 Skill 管理</div>
+      </div>
+    </div>
+    <div class="input-area">
+      <div class="input-card">
+        <div class="input-top"><textarea rows="1" placeholder="有什么可以帮你？"></textarea></div>
+        <div class="input-bottom">
+          <button class="itool"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg></button>
+          <button class="itool">
+            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2"><path d="M9.663 17h4.673M12 3v1"/></svg>思考
+          </button>
+          <button class="itool">
+            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>深度研究
+          </button>
+          <span class="imodel">Claude Sonnet (Bedrock)<svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" fill="none" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <button class="isend"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BACKDROP -->
+  <div class="overlay" id="overlay" onclick="closePanel()"></div>
+
+  <!-- SKILL PANEL (closed by default) -->
+  <div class="skill-panel" id="skill-panel">
+    <div class="panel-hd">
+      <span class="panel-title">Skill 管理</span>
+      <span class="panel-source">数据来自 V2 ai-skill-agent-dev · 最近同步 5 分钟前</span>
+      <button class="panel-close" onclick="closePanel()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+
+    <!-- DEFAULT: has body -->
+    <div class="panel-body" id="panel-default">
+      <div class="panel-left">
+        <button class="p-act" onclick="showToast('正在刷新验证…')">
+          <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>刷新验证
+        </button>
+        <button class="p-act" onclick="showToast('正在同步 Skills…')">
+          <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>同步 Skills
+        </button>
+        <button class="p-act" onclick="showToast('加载 RAG 更新记录…')">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>RAG 更新记录
+        </button>
+        <div class="p-div"></div>
+        <button class="p-act primary" onclick="showToast('正在运行冲突检测…')">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>冲突检测
+        </button>
+        <button class="p-link">
+          <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Skill 规范
+        </button>
+      </div>
+
+      <div class="panel-right">
+        <div class="panel-search">
+          <input type="text" id="search-input" placeholder="搜索 Skill 名称…" oninput="filterSkills(this.value)">
+        </div>
+        <div class="panel-tabs">
+          <button class="ptab on" onclick="switchTab('list',this)">Skill 列表</button>
+          <button class="ptab" onclick="switchTab('matrix',this)">冲突矩阵</button>
+        </div>
+        <div class="skill-list" id="tab-list">
+          <table class="sk-table">
+            <thead><tr>
+              <th style="width:36px"></th>
+              <th>名称</th>
+              <th style="width:90px">类型</th>
+              <th style="width:130px">规范状态</th>
+              <th style="width:96px">最后更新</th>
+            </tr></thead>
+            <tbody id="skill-tbody"></tbody>
+          </table>
+        </div>
+        <div class="matrix-wrap" id="tab-matrix" style="display:none">
+          <table class="mx-table" id="mx-table"></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOADING STATE -->
+    <div class="panel-state" id="panel-loading" style="display:none">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+      <div style="font-size:12px">正在加载 Skill 数据…</div>
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div class="panel-state" id="panel-empty" style="display:none">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".25"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+      <div style="font-size:13px">暂无 Skill 数据</div>
+      <div style="font-size:11px">点击左侧「同步 Skills」后刷新</div>
+    </div>
+
+    <!-- ERROR STATE -->
+    <div class="panel-state" id="panel-error" style="display:none">
+      <div style="font-size:26px">⚠️</div>
+      <div style="font-size:13px">加载失败</div>
+      <div style="font-size:11px">无法连接 V2 数据源，请检查网络</div>
+      <button onclick="setPanelState('default')" style="margin-top:8px;padding:5px 14px;border-radius:5px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:12px;font-family:inherit">重试</button>
+    </div>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<!-- STATE SWITCHER -->
+<div class="switcher">
+  <button class="sw on" onclick="setState('default')">默认</button>
+  <button class="sw" onclick="setState('empty')">空态</button>
+  <button class="sw" onclick="setState('loading')">加载</button>
+  <button class="sw" onclick="setState('error')">错误</button>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────
+const SKILLS = [
+  {
+    id: 'flash-swap',
+    name: 'cap.cex.flash-swap',
+    type: 'bundle',
+    ok: false,
+    date: '2026-04-12',
+    desc: '闪兑换币能力，支持用户在 Gate CEX 平台进行快速币种兑换，无需挂单即时成交，适用于小额快速兑换场景。',
+    content: '该 Skill 封装了 Gate CEX 的 Flash Swap（闪兑）核心流程，包括参数填充与预览、用户确认、订单提交三个阶段。用户可通过自然语言描述兑换意图，AI 自动解析并调用对应能力完成交易。',
+    checks: {
+      format: [{ok:false, label:'不通过', val:'缺少 description 字段（skill.md 中 description 为空）'}
+               ,{ok:true,  label:'通过',   val:'name 字段合法，符合命名规范'}
+               ,{ok:true,  label:'通过',   val:'api.json 格式正确，字段完整'}],
+      semantic:[{ok:true,  label:'通过',   val:'意图描述语义清晰，表达准确'}
+               ,{ok:true,  label:'通过',   val:'功能边界明确，无歧义描述'}],
+      conflict: [{ok:false, label:'冲突',   val:'与 cap.cex.futures 存在意图重叠（相似度 0.81）'}
+                ,{ok:true,  label:'通过',   val:'与 cap.cex.spot-trading 无冲突'}]
+    },
+    atomics: [
+      { name: 'cap.cex.flash-swap.check-and-fill-flash-swap', desc: '检查并填充闪兑换币参数，返回兑换预览信息（含汇率、手续费）' },
+      { name: 'cap.cex.flash-swap.confirm-flash-swap',        desc: '确认并提交闪兑换币订单，完成实际兑换操作' }
+    ]
+  },
+  {
+    id: 'flash-swap-check',
+    name: 'cap.cex.flash-swap.check-and-fill-flash-swap',
+    type: 'atomic',
+    ok: true,
+    date: '2026-04-12',
+    desc: '检查并填充闪兑换币的参数，返回兑换预览信息，包含实时汇率、预估手续费和滑点。',
+    actions: [
+      {
+        name: 'check_and_fill_flash_swap',
+        desc: '填充并预览一笔闪兑换币交易',
+        params: [
+          { name:'sell_currency', type:'string', req:true,  desc:'卖出币种代码，如 USDT、BTC' },
+          { name:'buy_currency',  type:'string', req:true,  desc:'买入币种代码，如 BTC、ETH' },
+          { name:'sell_amount',   type:'string', req:false, desc:'卖出数量（与 buy_amount 二选一）' },
+          { name:'buy_amount',    type:'string', req:false, desc:'买入数量（与 sell_amount 二选一）' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'spot',
+    name: 'cap.cex.spot-trading',
+    type: 'bundle',
+    ok: true,
+    date: '2026-04-11',
+    desc: '现货交易能力，覆盖限价/市价下单、撤单、订单查询，支持主流交易对。',
+    content: '封装 Gate CEX 现货交易核心操作。用户可通过自然语言描述交易意图，AI 解析价格、数量、方向等参数后调用对应 Atomic 能力完成操作。支持 BTC、ETH 等 200+ 交易对。',
+    checks: {
+      format: [{ok:true, label:'通过', val:'所有必填字段完整'}
+              ,{ok:true, label:'通过', val:'api.json 格式正确'}],
+      semantic:[{ok:true, label:'通过', val:'意图描述清晰，无歧义'}],
+      conflict: [{ok:true, label:'通过', val:'与其他 Skill 无意图冲突'}]
+    },
+    atomics: [
+      { name: 'cap.cex.spot-trading.place-order',  desc: '提交一笔现货限价或市价订单' },
+      { name: 'cap.cex.spot-trading.cancel-order', desc: '撤销指定订单' },
+      { name: 'cap.cex.spot-trading.get-order-book', desc: '查询当前挂单深度' }
+    ]
+  },
+  {
+    id: 'spot-place',
+    name: 'cap.cex.spot-trading.place-order',
+    type: 'atomic',
+    ok: true,
+    date: '2026-04-11',
+    desc: '提交一笔现货限价或市价订单到 Gate CEX 交易引擎。',
+    actions: [
+      {
+        name: 'place_spot_order',
+        desc: '下达一笔现货买/卖订单',
+        params: [
+          { name:'symbol',    type:'string', req:true,  desc:'交易对，如 BTC_USDT' },
+          { name:'side',      type:'string', req:true,  desc:'交易方向：buy 或 sell' },
+          { name:'type',      type:'string', req:true,  desc:'订单类型：limit（限价）或 market（市价）' },
+          { name:'amount',    type:'string', req:true,  desc:'下单数量（基础币种）' },
+          { name:'price',     type:'string', req:false, desc:'限价单价格，市价单无需传' },
+          { name:'time_in_force', type:'string', req:false, desc:'订单时效：gtc / ioc / fok' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'futures',
+    name: 'cap.cex.futures',
+    type: 'bundle',
+    ok: false,
+    date: '2026-04-10',
+    desc: '合约交易能力，支持永续合约的开仓、平仓、杠杆调整。',
+    content: '封装 Gate CEX 永续合约核心操作。涵盖仓位管理、保证金调整、止盈止损等功能，适用于量化策略调试和合约交易场景。',
+    checks: {
+      format: [{ok:true, label:'通过', val:'格式字段完整'}],
+      semantic:[{ok:false, label:'不通过', val:'意图描述与 cap.cex.spot-trading 高度重叠，存在歧义，模型难以区分'}
+               ,{ok:false, label:'不通过', val:'缺少明确的合约类型约束描述（永续/交割未区分）'}],
+      conflict: [{ok:false, label:'冲突', val:'与 cap.cex.flash-swap 存在部分意图重叠（相似度 0.77）'}]
+    },
+    atomics: [
+      { name: 'cap.cex.futures.open-position',  desc: '开立一个永续合约仓位' },
+      { name: 'cap.cex.futures.close-position', desc: '平仓指定仓位' }
+    ]
+  },
+  {
+    id: 'withdraw',
+    name: 'cap.cex.withdraw',
+    type: 'bundle',
+    ok: true,
+    date: '2026-04-09',
+    desc: '资产提币能力，支持主流链上提现，含地址校验和手续费预估。',
+    content: '封装提币核心流程：地址合法性校验 → 手续费预估 → 提币申请提交。支持 BTC、ETH、TRX 等 50+ 链。',
+    checks: {
+      format: [{ok:true, label:'通过', val:'字段完整'}],
+      semantic:[{ok:true, label:'通过', val:'意图清晰，无歧义'}],
+      conflict: [{ok:true, label:'通过', val:'无冲突'}]
+    },
+    atomics: [
+      { name: 'cap.cex.withdraw.submit', desc: '提交提币申请' },
+      { name: 'cap.cex.withdraw.estimate-fee', desc: '预估提币手续费' }
+    ]
+  },
+  {
+    id: 'deposit-check',
+    name: 'cap.cex.deposit.check-status',
+    type: 'atomic',
+    ok: true,
+    date: '2026-04-08',
+    desc: '查询充币订单的到账状态及链上确认进度。',
+    actions: [
+      {
+        name: 'check_deposit_status',
+        desc: '查询指定充币记录的状态',
+        params: [
+          { name:'txid',     type:'string', req:false, desc:'链上交易 Hash' },
+          { name:'currency', type:'string', req:false, desc:'充币币种，如 USDT' },
+          { name:'chain',    type:'string', req:false, desc:'网络名，如 TRX、ERC20' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'vip',
+    name: 'cap.cex.vip.query-level',
+    type: 'atomic',
+    ok: true,
+    date: '2026-04-07',
+    desc: '查询当前用户的 VIP 等级及对应费率信息。',
+    actions: [
+      {
+        name: 'query_vip_level',
+        desc: '返回用户当前 VIP 等级与费率',
+        params: [
+          { name:'uid', type:'string', req:false, desc:'用户 UID，不传则查询当前登录账户' }
+        ]
+      }
+    ]
+  }
+];
+
+// ── RENDER ────────────────────────────────────────────────────────────
+function renderSkills(data){
+  const tbody = document.getElementById('skill-tbody');
+  tbody.innerHTML = '';
+  data.forEach(sk => {
+    const tr = document.createElement('tr');
+    tr.className = 'sk-row';
+    tr.dataset.id = sk.id;
+    tr.innerHTML = `
+      <td class="sk-td" style="padding-left:10px">
+        <span class="expand-icon"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></span>
+      </td>
+      <td class="sk-td"><span class="sk-name-cell">${sk.name}</span></td>
+      <td class="sk-td"><span class="sk-type ${sk.type==='bundle'?'type-bundle':'type-atomic'}">${sk.type==='bundle'?'Bundle':'Atomic'}</span></td>
+      <td class="sk-td"><span class="status-badge ${sk.ok?'s-ok':'s-fail'}">${sk.ok?'✓ 规范通过':'⚠ 不符合规范'}</span></td>
+      <td class="sk-td sk-date">${sk.date}</td>`;
+    tr.onclick = () => toggleRow(sk, tr);
+    tbody.appendChild(tr);
+  });
+}
+
+let openId = null;
+function toggleRow(sk, tr){
+  const existing = document.getElementById('det-' + sk.id);
+  if(existing){ existing.remove(); tr.classList.remove('expanded'); openId=null; return; }
+  // close old
+  if(openId){ const old=document.getElementById('det-'+openId); if(old)old.remove();
+    document.querySelectorAll('.sk-row.expanded').forEach(r=>r.classList.remove('expanded')); }
+  openId = sk.id;
+  tr.classList.add('expanded');
+  const dr = document.createElement('tr');
+  dr.id = 'det-' + sk.id;
+  dr.className = 'detail-row';
+  dr.innerHTML = `<td colspan="5"><div class="detail-box">${buildDetail(sk)}</div></td>`;
+  tr.after(dr);
+}
+
+function buildDetail(sk){
+  if(sk.type === 'bundle') return buildBundle(sk);
+  return buildAtomic(sk);
+}
+
+function buildBundle(sk){
+  const checks = sk.checks;
+  const uid = sk.id + '_' + Date.now();
+
+  function renderChecks(list){
+    return list.map(c=>`
+      <div class="detail-check-item">
+        <div class="check-badge ${c.ok?'check-ok':'check-fail'}">
+          <svg viewBox="0 0 24 24">${c.ok?'<polyline points="20 6 9 17 4 12"/>':'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'}</svg>
+        </div>
+        <span class="check-label">${c.label}：</span>
+        <span class="check-val">${c.val}</span>
+      </div>`).join('');
+  }
+  const atomicLinks = sk.atomics.map(a=>`
+    <div class="atomic-ref">
+      <span class="sk-type type-atomic" style="font-size:10px;padding:1px 6px">Atomic</span>
+      <span class="atomic-ref-name">${a.name}</span>
+      <span style="font-size:11px;color:var(--muted)">${a.desc}</span>
+    </div>`).join('');
+
+  const tabs = [
+    { key:'content', label:'Bundle 内容' },
+    { key:'atomics', label:'子能力' },
+    { key:'format',  label:'格式校验' },
+    { key:'semantic',label:'语义检测' },
+    { key:'conflict',label:'冲突检测' },
+  ];
+  const tabsHtml = tabs.map((t,i)=>`
+    <button class="dtab${i===0?' on':''}" onclick="switchBundleTab('${uid}','${t.key}',this)">${t.label}</button>`).join('');
+
+  const panes = {
+    content:  `<div class="detail-desc">${sk.content}</div>`,
+    atomics:  `<div class="atomics-list">${atomicLinks}</div>`,
+    format:   `<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden">${renderChecks(checks.format)}</div>`,
+    semantic: `<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden">${renderChecks(checks.semantic)}</div>`,
+    conflict: `<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden">${renderChecks(checks.conflict)}</div>`,
+  };
+  const panesHtml = tabs.map((t,i)=>`
+    <div id="${uid}_${t.key}" style="display:${i===0?'block':'none'}">${panes[t.key]}</div>`).join('');
+
+  return `
+    <div class="detail-section">
+      <div class="detail-sec-title"><svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>功能描述</div>
+      <div class="detail-desc">${sk.desc}</div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-tabs" style="display:flex;gap:0;margin-bottom:10px;border-bottom:1px solid var(--border)">
+        ${tabsHtml}
+      </div>
+      <div id="${uid}_panes">${panesHtml}</div>
+    </div>`;
+}
+
+function buildAtomic(sk){
+  const actionsHtml = sk.actions.map(a=>{
+    const rows = a.params.map(p=>`
+      <tr>
+        <td><span class="param-name">${p.name}</span></td>
+        <td><span class="param-type">${p.type}</span></td>
+        <td><span class="param-req ${p.req?'req-yes':'req-no'}">${p.req?'必填':'可选'}</span></td>
+        <td class="param-desc">${p.desc}</td>
+      </tr>`).join('');
+    return `
+      <div class="action-item">
+        <div class="action-hd">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          <span class="action-name">${a.name}</span>
+          <span class="action-desc">${a.desc}</span>
+        </div>
+        <table class="params-table">
+          <thead><tr><th>参数名</th><th>类型</th><th>是否必填</th><th>说明</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="detail-section">
+      <div class="detail-sec-title"><svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>子能力说明</div>
+      <div class="detail-desc">${sk.desc}</div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-sec-title"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Actions</div>
+      <div class="action-list">${actionsHtml}</div>
+    </div>`;
+}
+
+// ── FILTER ────────────────────────────────────────────────────────────
+function filterSkills(q){
+  const filtered = q ? SKILLS.filter(s=>s.name.includes(q.toLowerCase())) : SKILLS;
+  renderSkills(filtered);
+  openId = null;
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────
+function switchTab(tab, btn){
+  document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('tab-list').style.display = tab==='list' ? '' : 'none';
+  document.getElementById('tab-matrix').style.display = tab==='matrix' ? '' : 'none';
+  if(tab==='matrix') renderMatrix();
+}
+
+function renderMatrix(){
+  const bundles = SKILLS.filter(s=>s.type==='bundle');
+  const names = bundles.map(s=>s.name.split('.').slice(-1)[0]);
+  const conflicts = [[0,4]]; // flash-swap vs futures
+  let html = '<tr><th></th>';
+  bundles.forEach((s,i)=>{ html+=`<th title="${s.name}">${names[i]}</th>`; });
+  html += '</tr>';
+  bundles.forEach((r,i)=>{
+    html+=`<tr><th title="${r.name}" style="text-align:left">${names[i]}</th>`;
+    bundles.forEach((c,j)=>{
+      if(i===j){ html+='<td class="self">—</td>'; }
+      else {
+        const conflict = conflicts.some(([a,b])=>(a===i&&b===j)||(a===j&&b===i));
+        html+=`<td class="${conflict?'conflict':'clear'}">${conflict?'⚠ 冲突':'✓'}</td>`;
+      }
+    });
+    html+='</tr>';
+  });
+  document.getElementById('mx-table').innerHTML = html;
+}
+
+// ── PANEL OPEN/CLOSE ─────────────────────────────────────────────────
+function openPanel(){
+  document.getElementById('skill-panel').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('skill-entry-btn').classList.add('active-btn');
+}
+function closePanel(){
+  document.getElementById('skill-panel').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('skill-entry-btn').classList.remove('active-btn');
+}
+
+// ── FOUR STATES ───────────────────────────────────────────────────────
+function setPanelState(s){
+  document.getElementById('panel-default').style.display = s==='default'?'flex':'none';
+  document.getElementById('panel-loading').style.display = s==='loading'?'flex':'none';
+  document.getElementById('panel-empty').style.display   = s==='empty'?'flex':'none';
+  document.getElementById('panel-error').style.display   = s==='error'?'flex':'none';
+}
+
+function setState(s){
+  if(s==='default'){
+    openPanel();
+    setPanelState('default');
+  } else if(s==='loading'){
+    openPanel();
+    setPanelState('loading');
+  } else if(s==='empty'){
+    openPanel();
+    setPanelState('empty');
+  } else if(s==='error'){
+    openPanel();
+    setPanelState('error');
+  }
+  document.querySelectorAll('.sw').forEach((b,i)=>{
+    b.classList.toggle('on',['default','empty','loading','error'][i]===s);
+  });
+}
+
+function switchBundleTab(uid, key, btn){
+  // deactivate all tabs in this bundle's tab bar
+  btn.closest('.detail-tabs').querySelectorAll('.dtab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  // hide all panes, show selected
+  document.querySelectorAll(`[id^="${uid}_"]`).forEach(el=>{
+    if(el.id === uid+'_panes') return;
+    el.style.display = el.id === uid+'_'+key ? 'block' : 'none';
+  });
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.opacity='1';
+  setTimeout(()=>{ t.style.opacity='0'; },2000);
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────
+renderSkills(SKILLS);
+// Panel closed by default; user must click "Skill" to open
+</script>
+</body>
+</html>
