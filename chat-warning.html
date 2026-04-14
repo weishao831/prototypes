@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>聊天规范警示 — V3 Limen</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#faf9f5;--sb:#f0ede6;--border:#e5e2da;--text:#1c1c1e;--muted:#8b8680;
+  --light:#b0aca6;--primary:#5b5bd6;--surface:#fff;
+  --tool-bg:#f5f3ff;--tool-border:#ddd6fe;--tool-icon:#7c3aed;
+  --ok:#16a34a;
+  --warn-bg:rgba(234,88,12,.1);--warn-border:rgba(234,88,12,.3);--warn-text:#c2410c;
+}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden;font-size:13px}
+
+/* SIDEBAR */
+.sb{width:220px;min-width:220px;background:var(--sb);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.sb-top{padding:10px 12px 8px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.bot-icon{width:26px;height:26px;background:var(--primary);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bot-icon svg{width:14px;height:14px;fill:#fff}
+.sb-name{font-size:12px;font-weight:600;flex:1}
+.sb-sub{font-size:10px;color:var(--muted)}
+.ib{width:22px;height:22px;border:none;background:transparent;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.ib:hover{background:rgba(0,0,0,.07)}
+.ib svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+.sb-nav{padding:6px 8px;display:flex;flex-direction:column;gap:2px}
+.sb-btn{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:5px;border:none;background:transparent;cursor:pointer;font-size:12px;color:var(--muted);width:100%;text-align:left;font-family:inherit}
+.sb-btn:hover{background:rgba(0,0,0,.05);color:var(--text)}
+.sb-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+.kb{margin-left:auto;font-size:10px;color:var(--light);background:rgba(0,0,0,.06);padding:1px 4px;border-radius:3px}
+.sb-section{padding:6px 12px 2px;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.sb-list{flex:1;overflow-y:auto;padding:0 8px 8px}
+.sb-group{font-size:10px;color:var(--light);padding:5px 4px 1px;font-weight:500}
+.sb-item{padding:5px 8px;border-radius:5px;cursor:pointer;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-item:hover{background:rgba(0,0,0,.05);color:var(--text)}
+.sb-item.active{background:rgba(91,91,214,.09);color:var(--primary);font-weight:500}
+.sb-bottom{padding:8px 12px;border-top:1px solid var(--border);display:flex;align-items:center}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* TOPBAR */
+.topbar{height:46px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;background:var(--bg)}
+.topbar-title{font-size:13px;font-weight:500;flex:1;min-width:0}
+.status-bar{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.stag{display:inline-flex;align-items:center;gap:3px;background:rgba(37,99,235,.09);color:#2563eb;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:500}
+.ssep{color:var(--light);font-size:11px}
+.top-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:12px;color:var(--text);font-family:inherit;margin-left:8px}
+.top-btn:hover{background:#f5f3ff;border-color:#c4b5fd;color:var(--primary)}
+.top-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* MESSAGES */
+.msgs{flex:1;overflow-y:auto;padding:24px 0}
+.msg-wrap{max-width:760px;margin:0 auto;padding:0 24px}
+.user-msg{display:flex;justify-content:flex-end;margin-bottom:16px}
+.user-bubble{background:var(--primary);color:#fff;border-radius:12px 12px 2px 12px;padding:9px 14px;font-size:13px;max-width:60%;line-height:1.5}
+.ai-msg{margin-bottom:20px}
+
+/* THINK BLOCK */
+.think-block{border:1px solid var(--tool-border);background:var(--tool-bg);border-radius:8px;margin-bottom:12px;overflow:hidden}
+.think-hd{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;user-select:none}
+.think-hd-icon{width:18px;height:18px;background:var(--tool-icon);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.think-hd-icon svg{width:10px;height:10px;fill:#fff}
+.think-hd-label{font-size:12px;font-weight:600;color:var(--tool-icon);flex:1}
+.think-arrow svg{width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:2;transition:transform .2s}
+.think-body{padding:4px 8px 8px;display:flex;flex-direction:column;gap:3px}
+
+/* TOOL CALL CARD */
+.tc{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.tc-hd{display:flex;align-items:center;gap:7px;padding:7px 10px;min-height:34px}
+.tc-icon{width:15px;height:15px;flex-shrink:0;color:var(--tool-icon)}
+.tc-icon svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+.tc-fn{font-size:12px;font-weight:600;color:var(--tool-icon);font-family:monospace;white-space:nowrap}
+.tc-arg{font-size:12px;color:var(--muted);font-family:monospace;margin-left:4px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.tc-right{flex-shrink:0;margin-left:8px;display:flex;align-items:center}
+.ok-check svg{width:15px;height:15px;stroke:var(--ok);fill:none;stroke-width:2.5}
+.warn-badge{display:inline-flex;align-items:center;gap:4px;background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn-text);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:500;white-space:nowrap}
+.warn-badge svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2}
+.tc-ex{border-top:1px solid var(--border)}
+.tc-ex-row{display:flex;align-items:center;gap:5px;padding:3px 10px;cursor:pointer;font-size:11px;color:var(--muted)}
+.tc-ex-row:hover{background:rgba(0,0,0,.03)}
+.tc-ex-row svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2}
+.tc-ex-row+.tc-ex-row{border-top:1px solid var(--border)}
+
+/* JSON + TEXT */
+.json-block{background:#1a1b26;border-radius:7px;padding:12px 14px;margin-bottom:12px;overflow-x:auto}
+.json-block pre{font-family:'Menlo','Monaco',monospace;font-size:11.5px;color:#a9b1d6;line-height:1.65;white-space:pre-wrap;word-break:break-all}
+.ai-text{font-size:13px;line-height:1.7;color:var(--text);margin-bottom:10px}
+.action-btns{display:flex;justify-content:flex-end;margin-bottom:4px}
+.action-btn{background:#16a34a;color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:500}
+
+/* INPUT */
+.input-area{padding:10px 24px 16px;flex-shrink:0}
+.input-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.input-top{padding:10px 14px 2px}
+.input-top textarea{width:100%;border:none;outline:none;resize:none;font-family:inherit;font-size:13px;color:var(--text);background:transparent;line-height:1.5}
+.input-bottom{display:flex;align-items:center;gap:6px;padding:6px 14px 10px}
+.itool{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:11px;color:var(--muted);font-family:inherit}
+.itool svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+.imodel{margin-left:auto;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:3px}
+.isend{width:28px;height:28px;border-radius:50%;background:var(--primary);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:6px}
+.isend svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2.5}
+
+/* SWITCHER */
+.switcher{position:fixed;top:10px;right:10px;display:flex;gap:3px;z-index:100;background:rgba(255,255,255,.94);border:1px solid var(--border);border-radius:7px;padding:4px;backdrop-filter:blur(8px);box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.sw{padding:3px 10px;border-radius:4px;border:none;background:transparent;cursor:pointer;font-size:11px;color:var(--muted);font-family:inherit}
+.sw.on{background:var(--primary);color:#fff}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sb">
+  <div class="sb-top">
+    <div class="bot-icon"><svg viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm-1.5 9.5v-5l4 2.5-4 2.5z"/></svg></div>
+    <div style="flex:1;min-width:0">
+      <div class="sb-name">wesber</div>
+      <div class="sb-sub">默认助手</div>
+    </div>
+    <button class="ib"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
+    <button class="ib"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="18" rx="1"/><rect x="3" y="3" width="4" height="18" rx="1"/></svg></button>
+  </div>
+  <div class="sb-nav">
+    <button class="sb-btn"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新对话</button>
+    <button class="sb-btn"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>搜索<span class="kb">⌘K</span></button>
+  </div>
+  <div class="sb-section">最近对话</div>
+  <div class="sb-list">
+    <div class="sb-group">今天</div>
+    <div class="sb-item active">购买10U比特币指南</div>
+    <div class="sb-item">帮我用Python写一个比特币定投模拟器（每周定…</div>
+    <div class="sb-group">昨天</div>
+    <div class="sb-item">帮我搜索知识库"Gate App如何交易"，之后给我…</div>
+    <div class="sb-group">更早</div>
+    <div class="sb-item">你好</div>
+    <div class="sb-item">用USDT买1GT</div>
+    <div class="sb-item">BTC价格查询助手</div>
+    <div class="sb-item">重炮台制作流程图</div>
+    <div class="sb-item">ETH市场线索与分析报告</div>
+    <div class="sb-item">BTC快速分析</div>
+  </div>
+  <div class="sb-bottom">
+    <button class="ib"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg></button>
+    <button class="ib" style="margin-left:auto"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+  </div>
+</aside>
+
+<!-- MAIN CHAT -->
+<main class="main">
+  <div class="topbar">
+    <span class="topbar-title">购买10U比特币指南</span>
+    <div class="status-bar">
+      <span class="stag">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        已连入上下文
+      </span>
+      <span class="ssep">·</span>
+      <span class="stag">VIP1</span>
+      <span class="ssep">·</span>
+      <span class="stag">15个能力</span>
+    </div>
+    <button class="top-btn">
+      <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      Capability
+    </button>
+    <button class="ib" style="margin-left:2px"><svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h12"/></svg></button>
+  </div>
+
+  <div class="msgs">
+    <!-- DEFAULT STATE -->
+    <div id="s-default">
+      <div class="msg-wrap">
+        <!-- User -->
+        <div class="user-msg"><div class="user-bubble">帮我购买 10U 的比特币</div></div>
+
+        <!-- AI -->
+        <div class="ai-msg">
+          <!-- 思考过程 -->
+          <div class="think-block">
+            <div class="think-hd" onclick="toggle(this)">
+              <div class="think-hd-icon">
+                <svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+              </div>
+              <span class="think-hd-label">思考过程</span>
+              <span class="think-arrow"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
+            </div>
+            <div class="think-body">
+
+              <!-- TC1: cap.cex.flash-swap — NON COMPLIANT -->
+              <div class="tc">
+                <div class="tc-hd">
+                  <span class="tc-icon"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>
+                  <span class="tc-fn">capability_load</span>
+                  <span class="tc-arg">cap.cex.flash-swap</span>
+                  <div class="tc-right">
+                    <div class="warn-badge">
+                      <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                      不符合规范，不予上线
+                    </div>
+                  </div>
+                </div>
+                <div class="tc-ex">
+                  <div class="tc-ex-row"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>参数</div>
+                  <div class="tc-ex-row"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>查看结果</div>
+                </div>
+              </div>
+
+              <!-- TC2: flash-swap.check-and-fill — OK -->
+              <div class="tc">
+                <div class="tc-hd">
+                  <span class="tc-icon"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>
+                  <span class="tc-fn">capability_load</span>
+                  <span class="tc-arg">cap.cex.flash-swap.check-and-fill-flash-swap</span>
+                  <div class="tc-right ok-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+                </div>
+                <div class="tc-ex">
+                  <div class="tc-ex-row"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>参数</div>
+                  <div class="tc-ex-row"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>查看结果</div>
+                </div>
+              </div>
+
+              <!-- TC3: capability_action flash-swap — OK -->
+              <div class="tc">
+                <div class="tc-hd">
+                  <span class="tc-icon"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>
+                  <span class="tc-fn">capability_action</span>
+                  <span class="tc-arg">cap.cex.flash-swap</span>
+                  <div class="tc-right ok-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+                </div>
+                <div class="tc-ex">
+                  <div class="tc-ex-row"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>参数</div>
+                  <div class="tc-ex-row"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>查看结果</div>
+                </div>
+              </div>
+
+              <!-- TC4: capability_action check-and-fill — OK -->
+              <div class="tc">
+                <div class="tc-hd">
+                  <span class="tc-icon"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>
+                  <span class="tc-fn">capability_action</span>
+                  <span class="tc-arg">cap.cex.flash-swap.check-and-fill-flash-swap</span>
+                  <div class="tc-right ok-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+                </div>
+                <div class="tc-ex">
+                  <div class="tc-ex-row"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>参数</div>
+                  <div class="tc-ex-row"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>查看结果</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- JSON -->
+          <div class="json-block"><pre>{"card_id": "card_5652f203", "card_state": "init", "type": "flash_swap",
+"summary": "check-and-fill-flash-swap返回信息", "flash_swap": {
+  "trade_category": "flash_swap",
+  "payload": {"buy_amount": "0", "buy_currency": "BTC",
+               "sell_amount": "10", "sell_currency": "USDT"},
+  "valid": true, "error_msg": "", "state": "pending"}}</pre></div>
+
+          <!-- ANSWER -->
+          <p class="ai-text">以上是本次兑换预览，用 10 USDT 即时买入 BTC，确认后将按当前市场价格成交。</p>
+          <div class="action-btns"><button class="action-btn">买10U的BTC</button></div>
+        </div>
+
+        <!-- DIVIDER -->
+        <div style="border-top:1px solid var(--border);margin:24px 0"></div>
+
+        <!-- SECOND CONVO: compliant skill, no warning -->
+        <div class="user-msg"><div class="user-bubble">帮我查一下当前现货 BTC/USDT 挂单情况</div></div>
+        <div class="ai-msg">
+          <div class="think-block">
+            <div class="think-hd" onclick="toggle(this)">
+              <div class="think-hd-icon"><svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1"/></svg></div>
+              <span class="think-hd-label">思考过程</span>
+              <span class="think-arrow"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
+            </div>
+            <div class="think-body">
+              <div class="tc">
+                <div class="tc-hd">
+                  <span class="tc-icon"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>
+                  <span class="tc-fn">capability_load</span>
+                  <span class="tc-arg">cap.cex.spot-trading</span>
+                  <div class="tc-right ok-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+                </div>
+                <div class="tc-ex">
+                  <div class="tc-ex-row"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>参数</div>
+                  <div class="tc-ex-row"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>查看结果</div>
+                </div>
+              </div>
+              <div class="tc">
+                <div class="tc-hd">
+                  <span class="tc-icon"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>
+                  <span class="tc-fn">capability_action</span>
+                  <span class="tc-arg">cap.cex.spot-trading.get-order-book</span>
+                  <div class="tc-right ok-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+                </div>
+                <div class="tc-ex">
+                  <div class="tc-ex-row"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>参数</div>
+                  <div class="tc-ex-row"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>查看结果</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="ai-text">当前 BTC/USDT 最优买1价 <strong>84,320 USDT</strong>，最优卖1价 <strong>84,356 USDT</strong>，价差 36 USDT（0.04%）。流动性充足。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div id="s-empty" style="display:none;text-align:center;padding-top:100px">
+      <div style="font-size:30px;margin-bottom:12px">💬</div>
+      <div style="font-size:14px;font-weight:500;margin-bottom:6px">暂无对话</div>
+      <div style="font-size:12px;color:var(--muted)">在下方输入框开始对话</div>
+    </div>
+
+    <!-- LOADING STATE -->
+    <div id="s-loading" style="display:none">
+      <div class="msg-wrap">
+        <div class="user-msg"><div class="user-bubble">帮我购买 10U 的比特币</div></div>
+        <div class="ai-msg">
+          <div class="think-block">
+            <div class="think-hd">
+              <div class="think-hd-icon"><svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1"/></svg></div>
+              <span class="think-hd-label">思考过程</span>
+            </div>
+            <div class="think-body" style="padding:16px;text-align:center;color:var(--muted);font-size:12px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite;margin-right:6px"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+              正在调用工具…
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ERROR STATE -->
+    <div id="s-error" style="display:none;text-align:center;padding-top:100px">
+      <div style="font-size:30px;margin-bottom:12px">⚠️</div>
+      <div style="font-size:14px;font-weight:500;margin-bottom:6px">加载失败</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px">网络异常，请稍后重试</div>
+      <button onclick="setState('default')" style="padding:6px 16px;border-radius:6px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:12px;font-family:inherit">重试</button>
+    </div>
+  </div>
+
+  <!-- INPUT -->
+  <div class="input-area">
+    <div class="input-card">
+      <div class="input-top"><textarea rows="1" placeholder="有什么可以帮你？"></textarea></div>
+      <div class="input-bottom">
+        <button class="itool"><svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg></button>
+        <button class="itool">
+          <svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          思考
+        </button>
+        <button class="itool">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          深度研究
+        </button>
+        <span class="imodel">Claude Sonnet (Bedrock) <svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" fill="none" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+        <button class="isend"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- STATE SWITCHER -->
+<div class="switcher">
+  <button class="sw on" onclick="setState('default')">默认</button>
+  <button class="sw" onclick="setState('empty')">空态</button>
+  <button class="sw" onclick="setState('loading')">加载</button>
+  <button class="sw" onclick="setState('error')">错误</button>
+</div>
+
+<script>
+function setState(s){
+  ['default','empty','loading','error'].forEach(x=>{
+    document.getElementById('s-'+x).style.display=x===s?'':'none';
+  });
+  document.querySelectorAll('.sw').forEach((b,i)=>{
+    b.classList.toggle('on',['default','empty','loading','error'][i]===s);
+  });
+}
+function toggle(hd){
+  const body=hd.nextElementSibling;
+  const arrow=hd.querySelector('.think-arrow svg');
+  const open=body.style.display!=='none';
+  body.style.display=open?'none':'';
+  arrow.style.transform=open?'rotate(-90deg)':'';
+}
+</script>
+</body>
+</html>
